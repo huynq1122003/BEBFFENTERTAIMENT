@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bảng chấm công</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+ <style>
+    body { background: #f4f6f9; }
+    .card { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .btn-checkin { background: #28a745; color: #fff; }
+    .btn-checkout { background: #dc3545; color: #fff; }
+   .download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px; /* khoảng cách icon và chữ */
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+}
+.download-btn .material-icons {
+  color: black;
+  font-size: 22px;
+  transition: all 0.3s ease;
+}
+.download-btn:hover {
+  background: #4CAF50; /* xanh lá */
+  border-color: #4CAF50;
+  color: white;
+}
+.download-btn:hover .material-icons {
+  color: white;
+}
+  </style>
+</head>
+<body>
+  <%- include("inc/header", { user: user }) %>
+  <main class="p-4" style="margin-left:240px">
+  <div class="container py-4">
+    <h2 class="mb-4 text-center">Bảng chấm công</h2>
+
+    <div class="d-flex justify-content-between mb-3">
+      <form method="get" class="d-flex">
+        <input type="date" name="date" value="<%= selectedDate %>" class="form-control w-auto">
+        <button type="submit" class="btn btn-primary ms-2">Lọc</button>
+      </form>
+
+     <a href="/attendance/export?date=<%= selectedDate %>" class="download-btn" title="Tải Excel">
+  <span class="material-icons">download</span> Tải Excel
+</a>
+
+    </div>
+
+    <div class="card p-3">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nhân viên</th>
+            <th>Chức vụ</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Ghi chú</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% staffs.forEach(staff => { 
+              const att = attendance[staff.id] || {};
+          %>
+            <tr>
+              <td><%= staff.Name %></td>
+              <td><%= staff.authority %></td>
+              <td><%= att.checkIn || "-" %></td>
+              <td><%= att.checkOut || "-" %></td>
+              <td><%= att.note || "" %></td>
+              <td>
+                <% if (!att.checkIn) { %>
+                  <form method="post" action="/attendance/checkin/<%= staff.id %>" class="d-flex align-items-center">
+                    <input type="hidden" name="date" value="<%= selectedDate %>">
+                    <input type="text" name="note" placeholder="Ghi chú" class="form-control form-control-sm me-2" style="width: 120px;">
+                    <button class="btn btn-sm btn-checkin">Check-in</button>
+                  </form>
+                <% } %>
+                <% if (att.checkIn && !att.checkOut) { %>
+                  <form method="post" action="/attendance/checkout/<%= staff.id %>" class="d-flex align-items-center">
+                    <input type="hidden" name="date" value="<%= selectedDate %>">
+                    <input type="text" name="note" placeholder="Ghi chú" class="form-control form-control-sm me-2" style="width: 120px;">
+                    <button class="btn btn-sm btn-checkout">Check-out</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </main>
+</body>
+</html>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("form[action*='checkin'], form[action*='checkout']").forEach(form => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const isCheckin = form.action.includes("checkin");
+        const actionText = isCheckin ? "CHECK-IN" : "CHECK-OUT";
+
+        Swal.fire({
+          title: `Xác nhận ${actionText}?`,
+          text: `Bạn có chắc muốn ${actionText.toLowerCase()} không?`,
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Có, tiếp tục",
+          cancelButtonText: "Hủy",
+          confirmButtonColor: isCheckin ? "#28a745" : "#dc3545",
+          cancelButtonColor: "#6c757d"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
+      });
+    });
+  });
+</script>

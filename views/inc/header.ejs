@@ -1,0 +1,155 @@
+<!-- Sidebar trái -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <a href="/dashboard" class="logo"> <img src="/images/BFF.png" alt="Logo" class="logo-img"></a>
+  </div>
+
+  <div class="user-section">
+    <% if (user) { %>
+      <img src="<%= user.img || '/images/default.png' %>" alt="avatar" class="avatar">
+      <span class="username"><%= user.name %></span>
+    <% } else { %>
+      <a href="/" class="login-btn">Đăng nhập</a>
+    <% } %>
+  </div>
+
+  <ul class="menu">
+    <li><a href="/dashboard">🏠 Dashboard</a></li>
+    <li><a href="/mv">🎵 MV</a></li>
+      <% if (user && user.authority === 'ADMIN') { %>
+    <li><a href="/admin">👨‍🏫 Staff</a></li>
+  <% } %>
+    <li><a href="/notifications">🔔 Notifications</a></li>
+    
+    <li><a href="/statistics">📊 Statistics</a></li>
+      <% if (user && user.authority === 'ADMIN') { %>
+    <li><a href="/attendance">🔑 Chấm Công</a></li>
+     <% } %>
+    <li><a href="/settings">⚙️ Settings</a></li>
+  </ul>
+
+  <% if (user) { %>
+    <div class="logout">
+      <a href="/logout">🚪 Đăng xuất</a>
+    </div>
+  <% } %>
+</aside>
+
+<style>
+/* Sidebar styles */
+/* Reset body */
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+.logo-img {
+  width: 150px;   /* chỉnh theo kích thước bạn muốn */
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 230px;
+  height: 100vh;
+  background: #2c3e50;
+  color: #fff;
+  overflow-y: scroll;   /* cho cuộn */
+}
+
+/* Ẩn thanh scrollbar */
+.sidebar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari */
+}
+.sidebar {
+  -ms-overflow-style: none;  /* IE, Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+
+/* Nội dung chính */
+main {
+  margin-left: 230px; /* chừa khoảng bằng sidebar */
+  padding: 20px;
+  flex-grow: 1;
+  background: #f4f6f9;
+  min-height: 100vh;
+}
+
+
+.sidebar-header {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.logo {
+  color: #fff;
+  text-decoration: none;
+}
+
+.user-section {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.user-section .avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.username {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.menu li {
+  margin: 12px 0;
+}
+
+.menu a {
+  color: #ecf0f1;
+  text-decoration: none;
+  font-size: 15px;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.menu a:hover {
+  background: #34495e;
+}
+
+.logout {
+  margin-top: auto;
+  text-align: center;
+}
+
+.logout a {
+  display: block;
+  color: #e74c3c;
+  text-decoration: none;
+  font-weight: bold;
+  padding: 10px;
+}
+
+.logout a:hover {
+  background: #c0392b;
+  border-radius: 6px;
+}
+</style>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>BFF - ENTERTAIMENT – đăng nhập hoặc đăng ký</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 950px;
+}
+
+.left {
+    max-width: 500px;
+}
+
+.logo {
+    font-size: 56px;
+    color: #1877f2;
+    margin: 0;
+    font-weight: bold;
+}
+
+.left p {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+.right {
+    width: 400px;
+}
+
+.login-box {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.login-box input {
+    margin-bottom: 12px;
+    padding: 14px;
+    font-size: 16px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+}
+
+.login-btn {
+    background: #1877f2;
+    color: white;
+    font-size: 18px;
+    border: none;
+    padding: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.login-btn:hover {
+    background: #166fe5;
+}
+
+.forgot {
+    text-align: center;
+    display: block;
+    margin: 10px 0;
+    color: #1877f2;
+    text-decoration: none;
+}
+
+hr {
+    margin: 15px 0;
+    border: 0.5px solid #ddd;
+}
+
+.create-btn {
+    background: #42b72a;
+    color: white;
+    font-size: 16px;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.create-btn:hover {
+    background: #36a420;
+}
+
+.page-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.page-link a {
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+             <img src="/images/BFF.png" alt="Logo" class="logo">
+            
+        </div>
+
+        
+        <div class="right">
+            <form class="login-box" method="POST" action="/">
+                 <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-danger" style="margin-bottom:12px; padding:10px; border-radius:6px; background:#f8d7da; color:#842029;">
+        <%= message %>
+      </div>
+    <% } %>
+                <input type="text" name="email" placeholder="Email hoặc số điện thoại" required>
+                <input type="password" name="password" placeholder="Mật khẩu" required>
+                <button type="submit" class="login-btn">Đăng nhập</button>
+                
+               
+            </form>
+            <p class="page-link">
+                BFF Entertainment mang trong mình sứ mệnh kết nối nghệ thuật với công chúng, tạo nên những giá trị văn hóa tích cực, và đồng hành cùng thế hệ nghệ sĩ trẻ trên con đường chinh phục ước mơ.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+function forgotPassword() {
+  Swal.fire({
+    title: "Quên mật khẩu?",
+    text: "Bạn có muốn lấy lại mật khẩu bằng email?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Có, gửi mã",
+    cancelButtonText: "Hủy",
+    reverseButtons: true
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      const email = await Swal.fire({
+        title: "Nhập email",
+        input: "email",
+        inputLabel: "Chúng tôi sẽ gửi mã OTP tới email của bạn",
+        inputPlaceholder: "name@example.com",
+        showCancelButton: true,
+        confirmButtonText: "Gửi mã"
+      });
+
+      if (!email.value) return;
+
+      // Gửi request tới server
+      const res1 = await fetch("/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.value })
+      });
+      const data1 = await res1.json();
+
+      if (!data1.success) {
+        Swal.fire("Lỗi!", data1.message || "Không gửi được mã", "error");
+        return;
+      }
+
+      Swal.fire("Đã gửi!", "Mã OTP đã được gửi vào email.", "success");
+
+      // Nhập OTP
+      const otp = await Swal.fire({
+        title: "Nhập mã OTP",
+        input: "text",
+        inputPlaceholder: "Nhập mã gồm 6 số",
+        showCancelButton: true,
+        confirmButtonText: "Xác nhận"
+      });
+      if (!otp.value) return;
+
+      // Nhập mật khẩu mới
+      const newPass = await Swal.fire({
+        title: "Mật khẩu mới",
+        input: "password",
+        inputPlaceholder: "Nhập mật khẩu mới",
+        showCancelButton: true,
+        confirmButtonText: "Đổi mật khẩu"
+      });
+      if (!newPass.value) return;
+
+      // Gửi API reset
+      const res2 = await fetch("/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.value, otp: otp.value, password: newPass.value })
+      });
+      const data2 = await res2.json();
+
+      if (data2.success) {
+        Swal.fire("Thành công!", "Mật khẩu đã được đổi, hãy đăng nhập lại.", "success")
+          .then(() => window.location.href = "/");
+      } else {
+        Swal.fire("Lỗi!", data2.message || "Không đổi được mật khẩu", "error");
+      }
+    }
+  });
+}
+</script>
+

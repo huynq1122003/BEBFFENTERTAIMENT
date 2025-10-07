@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách MV</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    main { margin-left: 240px; padding: 20px; }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .actions input { width: 250px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      vertical-align: middle;
+    }
+    td img {
+      width: 80px; height: 60px; object-fit: cover; border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <%- include("inc/header", { user: user }) %>
+
+  <main>
+    <h1>Danh sách MV</h1>
+
+    <div class="actions">
+      <input type="text" id="searchBox" class="form-control" placeholder="Tìm MV hoặc Ca sĩ...">
+      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMVModal">+ Thêm MV</button>
+    </div>
+
+    <table id="mvTable" class="table">
+      <thead>
+        <tr>
+          <th>Ảnh</th>
+          <th>Tên MV</th>
+          <th>Ca sĩ</th>
+          <th>Ngày</th>
+          <th>Link YT</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% mvList.forEach(mv => { %>
+          <tr>
+            <td><img src="<%= mv.img || '/images/default-mv.png' %>" alt=""></td>
+            <td><%= mv.Name %></td>
+            <td><%= mv.Singer %></td>
+            <td><%= mv.Date %></td>
+            <td style="max-width:250px; word-break:break-word;"><%= mv.YT %></td>
+            <td>
+              <button class="btn btn-sm btn-primary"
+                data-mv='<%- JSON.stringify(mv) %>'
+                onclick="openUpdateMV(this)">✏️</button>
+              <button class="btn btn-sm btn-danger" 
+  data-id="<%= mv.id %>" 
+  onclick="confirmDeleteMV(this)">🗑️</button>
+
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Modal Thêm MV -->
+  <div class="modal fade" id="addMVModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="/mv/add" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Thêm MV mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tên MV</label>
+              <input type="text" name="Name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ca sĩ</label>
+              <input type="text" name="Singer" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ngày</label>
+              <input type="date" name="ReleaseDate" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Link YouTube</label>
+              <input type="url" name="YT" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ảnh (chọn từ máy)</label>
+              <input type="file" name="img" accept="image/*" class="form-control">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-success">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Update MV -->
+  <div class="modal fade" id="updateMVModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="updateMVForm" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Cập nhật MV</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Tên MV</label>
+              <input type="text" name="Name" id="updateName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ca sĩ</label>
+              <input type="text" name="Singer" id="updateSinger" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Ngày</label>
+              <input type="date" name="ReleaseDate" id="updateDate" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Link YouTube</label>
+              <input type="url" name="YT" id="updateYT" class="form-control">
+            </div>
+             <div class="mb-3">
+    <label class="form-label">Ảnh (chọn từ máy nếu muốn thay)</label>
+    <input type="file" name="img" accept="image/*" class="form-control">
+  </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function confirmDeleteMV(btn){
+    const id = btn.getAttribute("data-id");
+    Swal.fire({
+      title: "Xóa MV này?",
+      text: "Bạn có chắc chắn muốn xóa MV này?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Có, xóa",
+      cancelButtonText: "Hủy",
+      confirmButtonColor: "#e74c3c",
+      cancelButtonColor: "#6c757d"
+    }).then((result) => {
+      if(result.isConfirmed){
+        window.location.href = "/mv/delete/" + id;
+      }
+    });
+  }
+</script>
+
+  <script>
+    // search filter
+    const searchBox = document.getElementById("searchBox");
+    const rows = document.querySelectorAll("#mvTable tbody tr");
+
+    searchBox.addEventListener("keyup", () => {
+      const searchText = searchBox.value.toLowerCase();
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(searchText) ? "" : "none";
+      });
+    });
+
+    // open update modal
+    function openUpdateMV(btn){
+      const mv = JSON.parse(btn.getAttribute("data-mv"));
+      document.getElementById("updateName").value = mv.Name || "";
+      document.getElementById("updateSinger").value = mv.Singer || "";
+      document.getElementById("updateDate").value = mv.Date || "";
+      document.getElementById("updateYT").value = mv.YT || "";
+      document.getElementById("updateMVForm").action = "/mv/update/" + mv.id;
+
+      var modal = new bootstrap.Modal(document.getElementById('updateMVModal'));
+      modal.show();
+    }
+  </script>
+</body>
+</html>

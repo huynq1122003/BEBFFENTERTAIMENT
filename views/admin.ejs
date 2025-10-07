@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Staff</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    main { margin-left: 240px; padding: 20px; }
+    .actions { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    table { background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.1); }
+    th, td { vertical-align: middle; }
+    td img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+    .password-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .password-mask {
+      font-family: "Courier New", monospace;
+      letter-spacing: 2px;
+    }
+    .btn-eye {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <%- include("inc/header", { user: user }) %>
+
+  <main>
+    <h1>Danh sách Staff</h1>
+    <div class="actions">
+      <input type="text" id="searchBox" class="form-control" placeholder="Tìm tên hoặc email..." style="width:250px;">
+      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStaffModal">+ Thêm Staff</button>
+    </div>
+
+    <table id="staffTable" class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Ảnh</th>
+          <th>Tên</th>
+          <th>Email</th>
+          <th>SĐT</th>
+          <th>Ngày sinh</th>
+          <th>Quyền</th>
+          <th>Mật khẩu</th>
+          <th>Trạng thái</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% staffList.forEach(staff => { %>
+          <tr>
+            <td><img src="<%= staff.img || '/images/default-avatar.png' %>"></td>
+            <td><%= staff.Name %></td>
+            <td><%= staff.Email %></td>
+            <td><%= staff.phone %></td>
+            <td><%= staff.BirthDay %></td>
+            <td><%= staff.authority %></td>
+            <td>
+              <div class="password-wrapper">
+                <span class="password-mask" data-pass="<%= staff.password || '' %>">
+                  <%= staff.password ? '•'.repeat(staff.password.length) : '' %>
+                </span>
+                <% if (staff.password) { %>
+                  <button class="btn-eye" type="button" onclick="togglePassword(this)">👁</button>
+                <% } %>
+              </div>
+            </td>
+            <td>
+              <% if (staff.locked) { %>
+                <span class="badge bg-danger">Locked</span>
+              <% } else { %>
+                <span class="badge bg-success">Active</span>
+              <% } %>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary"
+                data-staff='<%- JSON.stringify(staff) %>'
+                onclick="openUpdateStaff(this)">✏️</button>
+              <a href="/admin/delete/<%= staff.id %>" class="btn btn-sm btn-danger"
+                >🗑️</a>
+              <% if (staff.locked) { %>
+                <a href="/admin/unlock/<%= staff.id %>" class="btn btn-sm btn-warning">🔓</a>
+              <% } else { %>
+                <a href="/admin/lock/<%= staff.id %>" class="btn btn-sm btn-warning">🔒</a>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Modal Thêm Staff -->
+  <div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="/admin/add" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Thêm Staff</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" name="Name" class="form-control mb-2" placeholder="Tên" required>
+            <input type="email" name="Email" class="form-control mb-2" placeholder="Email" required>
+            <input type="text" name="phone" class="form-control mb-2" placeholder="Số điện thoại">
+            <input type="date" name="BirthDay" class="form-control mb-2">
+            <select name="authority" class="form-control mb-2">
+              <option value="STAFF">STAFF</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <input type="password" name="password" class="form-control mb-2" placeholder="Mật khẩu">
+            <input type="file" name="img" class="form-control">
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Update Staff -->
+  <div class="modal fade" id="updateStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="updateStaffForm" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Cập nhật Staff</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" name="Name" id="updateName" class="form-control mb-2" required>
+            <input type="email" name="Email" id="updateEmail" class="form-control mb-2" required>
+            <input type="text" name="phone" id="updatePhone" class="form-control mb-2">
+            <input type="date" name="BirthDay" id="updateBirthDay" class="form-control mb-2">
+            <select name="authority" id="updateAuthority" class="form-control mb-2">
+              <option value="STAFF">STAFF</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <input type="password" name="password" id="updatePassword" class="form-control mb-2">
+            <input type="file" name="img" class="form-control">
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+</body>
+</html>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // search filter
+  const searchBox = document.getElementById("searchBox");
+  const rows = document.querySelectorAll("#staffTable tbody tr");
+  searchBox.addEventListener("keyup", () => {
+    const val = searchBox.value.toLowerCase();
+    rows.forEach(r => {
+      r.style.display = r.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
+  });
+
+  // mở modal update
+  function openUpdateStaff(btn){
+    const staff = JSON.parse(btn.getAttribute("data-staff"));
+    document.getElementById("updateName").value = staff.Name || "";
+    document.getElementById("updateEmail").value = staff.Email || "";
+    document.getElementById("updatePhone").value = staff.phone || "";
+    document.getElementById("updateBirthDay").value = staff.BirthDay || "";
+    document.getElementById("updateAuthority").value = staff.authority || "STAFF";
+    document.getElementById("updatePassword").value = staff.password || "";
+    document.getElementById("updateStaffForm").action = "/admin/update/" + staff.id;
+
+    var modal = new bootstrap.Modal(document.getElementById('updateStaffModal'));
+    modal.show();
+  }
+
+  // ẩn/hiện mật khẩu
+  function togglePassword(btn){
+    const span = btn.parentElement.querySelector(".password-mask");
+    const original = span.getAttribute("data-pass");
+    if(span.innerText.includes("•")){
+      span.innerText = original; // show pass
+    } else {
+      span.innerText = "•".repeat(original.length); // hide pass
+    }
+  }
+
+  // xử lý xóa staff với SweetAlert2
+  document.querySelectorAll("a[href*='/admin/delete/']").forEach(a => {
+    a.addEventListener("click", function(e){
+      e.preventDefault();
+      const url = this.href;
+      Swal.fire({
+        title: "Xác nhận xóa?",
+        text: "Bạn có chắc muốn xóa staff này?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Có, xóa",
+        cancelButtonText: "Hủy",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#6c757d"
+      }).then(result => {
+        if(result.isConfirmed){
+          window.location.href = url;
+        }
+      });
+    });
+  });
+
+  // xử lý lock/unlock staff với SweetAlert2
+  document.querySelectorAll("a[href*='/admin/lock/'], a[href*='/admin/unlock/']").forEach(a => {
+    a.addEventListener("click", function(e){
+      e.preventDefault();
+      const url = this.href;
+      const isLock = url.includes("/lock/");
+      Swal.fire({
+        title: isLock ? "Khóa staff?" : "Mở khóa staff?",
+        text: isLock ? "Nhân viên sẽ bị khóa" : "Nhân viên sẽ được mở khóa",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Xác nhận",
+        cancelButtonText: "Hủy",
+        confirmButtonColor: "#ffc107",
+        cancelButtonColor: "#6c757d"
+      }).then(result => {
+        if(result.isConfirmed){
+          window.location.href = url;
+        }
+      });
+    });
+  });
+</script>
+
