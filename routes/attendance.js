@@ -2,6 +2,13 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../module/firebaseconfig");
 const ExcelJS = require("exceljs"); // dùng để tạo file excel
+
+// ✅ Hàm lấy thời gian chuẩn Việt Nam
+function getVietnamTime() {
+  const now = new Date();
+  return new Date(now.getTime() + 7 * 60 * 60 * 1000);
+}
+
 function isAdmin(req, res, next) {
   if (!req.session.user) {
     return res.redirect("/");
@@ -30,11 +37,12 @@ function isAdmin(req, res, next) {
   }
   next();
 }
+
 // GET trang chấm công
 router.get("/", isAdmin, async (req, res) => {
   if (!req.session.user) return res.redirect("/");
   const { date } = req.query;
-  const selectedDate = date || new Date().toISOString().slice(0, 10);
+  const selectedDate = date || getVietnamTime().toISOString().slice(0, 10);
 
   try {
     const staffsSnapshot = await db.collection("Admin").get();
@@ -61,8 +69,11 @@ router.get("/", isAdmin, async (req, res) => {
 router.post("/checkin/:staffId", async (req, res) => {
   const staffId = req.params.staffId;
   const note = req.body.note || "";
-  const date = req.body.date || new Date().toISOString().slice(0, 10); // lấy ngày từ form
-  const time = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+  // ✅ Giờ Việt Nam
+  const vnTime = getVietnamTime();
+  const date = req.body.date || vnTime.toISOString().slice(0, 10);
+  const time = vnTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 
   try {
     await db.collection("attendance").doc(`${staffId}_${date}`).set({
@@ -83,8 +94,11 @@ router.post("/checkin/:staffId", async (req, res) => {
 router.post("/checkout/:staffId", async (req, res) => {
   const staffId = req.params.staffId;
   const note = req.body.note || "";
-  const date = req.body.date || new Date().toISOString().slice(0, 10);
-  const time = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+  // ✅ Giờ Việt Nam
+  const vnTime = getVietnamTime();
+  const date = req.body.date || vnTime.toISOString().slice(0, 10);
+  const time = vnTime.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
 
   try {
     const docRef = db.collection("attendance").doc(`${staffId}_${date}`);
